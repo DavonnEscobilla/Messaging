@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'visible',
-    backgroundColor: '#pink',
-    marginTop: 40,
+    backgroundColor: 'lightgreen',
+    marginTop: 25,
   },
   contentContainer: {
     flexGrow: 1,
@@ -94,11 +94,11 @@ const styles = StyleSheet.create({
   messageRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginRight: 30,
+    marginRight: 20,
     marginBottom: 10,
   },
   messageBubble: {
-    backgroundColor: 'blue',
+    backgroundColor: 'darkblue',
     padding: 10,
     borderRadius: 8,
   },
