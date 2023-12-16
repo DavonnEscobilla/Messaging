@@ -1,6 +1,6 @@
 import React from 'react';
 import { PropTypes } from 'prop-types';
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, View, TouchableOpacity, Modal } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { MassageShape } from '../utils/MessageUtils';
 
@@ -16,30 +16,39 @@ export default class MessageList extends React.Component {
     onPressMessage: () => {},
   };
 
+  state = {
+    fullscreenImageId: null,
+  };
+
+  handlePressImage = (imageId) => {
+    this.setState({ fullscreenImageId: imageId });
+  };
+
+  handleCloseFullscreen = () => {
+    this.setState({ fullscreenImageId: null });
+  };
+
   renderMessageContent = ({ item }) => {
+    const { fullscreenImageId } = this.state;
     const { onPressMessage } = this.props;
 
-    switch (item.type) {
-      case 'text':
-        return (
-          <View style={styles.messageRow}>
-            <View style={styles.messageBubble}>
-              <Text style={styles.text}>{item.text}</Text>
-            </View>
-          </View>
-        );
+    const isFullscreen = item.type === 'image' && item.id === fullscreenImageId;
 
-      case 'image':
-        return (
-          <View style={styles.messageRow}>
-            <Image style={styles.image} source={{ uri: item.uri }} />
+    return (
+      <View style={styles.messageRow}>
+        {item.type === 'text' && (
+          <View style={styles.messageBubble}>
+            <Text style={styles.text}>{item.text}</Text>
           </View>
-        );
-
-      case 'location':
-        if (item.coordinate) {
-          return (
-            <View style={styles.messageRow}>
+        )}
+        {item.type === 'image' && (
+          <TouchableOpacity onPress={() => this.handlePressImage(item.id)} style={styles.imageContainer}>
+            <Image style={[styles.image, isFullscreen && styles.fullscreenImage]} source={{ uri: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=uclO7OrF' }} />
+          </TouchableOpacity>
+        )}
+        {item.type === 'location' && (
+          <View style={styles}>
+            {item.coordinate && (
               <View style={styles.mapContainer}>
                 <MapView
                   style={styles.map}
@@ -52,38 +61,42 @@ export default class MessageList extends React.Component {
                   <Marker coordinate={item.coordinate} />
                 </MapView>
               </View>
-            </View>
-          );
-        } else {
-          return <Text style={styles.locationText}>Location data is missing</Text>;
-        }
-
-      default:
-        return null;
-    }
+            )}
+            {!item.coordinate && <Text style={styles.locationText}>Location data is missing</Text>}
+          </View>
+        )}
+      </View>
+    );
   };
 
   render() {
     const { messages } = this.props;
+    const { fullscreenImageId } = this.state;
+
     return (
-      <FlatList
-        style={styles.container}
-        inverted
-        data={messages}
-        renderItem={this.renderMessageContent}
-        keyExtractor={keyExtractor}
-        keyboardShouldPersistTaps={'handled'}
-        contentContainerStyle={styles.contentContainer}
-      />
+      <View style={styles.container}>
+        <FlatList
+          inverted
+          data={messages}
+          renderItem={this.renderMessageContent}
+          keyExtractor={keyExtractor}
+          keyboardShouldPersistTaps={'handled'}
+          contentContainerStyle={styles.contentContainer}
+        />
+        <Modal visible={!!fullscreenImageId} transparent>
+          <TouchableOpacity style={styles.modalBackground} onPress={this.handleCloseFullscreen}>
+            <Image style={styles.modalImage} source={{ uri: 'https://artgallery.yale.edu/sites/default/files/styles/hero_small/public/2023-01/ag-doc-2281-0036-pub.jpg?h=147a4df9&itok=uclO7OrF' }} />
+          </TouchableOpacity>
+        </Modal>
+      </View>
     );
   }
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'visible',
-    backgroundColor: 'lightgreen',
+    backgroundColor: '#b2ffff',
     marginTop: 25,
   },
   contentContainer: {
@@ -107,12 +120,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   image: {
-    height: 200,
-    width: 200,
+    height: 400,
+    width: 400,
     borderRadius: 8,
   },
   mapContainer: {
-    height: 200,
+    height: 300,
     width: 200,
     borderRadius: 8,
     overflow: 'hidden',
@@ -124,5 +137,17 @@ const styles = StyleSheet.create({
   locationText: {
     color: 'red',
     fontStyle: 'italic',
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  modalImage: {
+    height: 300,
+    width: '100%',
+    resizeMode: 'contain',
+    borderRadius: 8,
   },
 });
